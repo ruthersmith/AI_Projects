@@ -1,6 +1,37 @@
 """
-    This claqss creates a brochure for a company to be used for prospective clients, investors and potential recruits
-    This brochure is based on the company name and their primary website
+main.py
+
+This module contains the `Brochure` class, which is responsible for generating
+company brochures in Markdown format using a large language model (LLM).
+
+The primary public interface of this module is the
+`Brochure.generate_brochure()` method. This method accepts a company name and
+company website URL, gathers and processes relevant information, and produces
+a structured Markdown brochure for the company.
+
+The implementation currently uses the OpenAI Python client library configured
+to work with a locally hosted Ollama instance running the `llama3.2` model.
+This setup allows brochure generation to run entirely on a local machine using
+an open-source model without requiring paid cloud API usage.
+
+Typical usage:
+    python main.py
+
+Example:
+    brochure = Brochure()
+    markdown = brochure.generate_brochure(
+        company_name="OpenAI",
+        company_website="https://openai.com"
+    )
+
+Requirements:
+    - Ollama installed and running locally
+    - `llama3.2` model available in Ollama
+    - OpenAI Python client library installed
+
+Purpose:
+    Generate simple AI-powered company brochures in Markdown format from a
+    company name and website.
 """
 import requests
 import json
@@ -12,8 +43,7 @@ class Brochure:
     def __init__(self):
         self.model = "llama3.2"
         self.openai = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
-      # Standard headers to fetch a website
-        
+        # Standard headers to fetch a website
         self.headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"
         }
@@ -142,6 +172,5 @@ class Brochure:
 
 if __name__ == "__main__":
     brochure = Brochure()
-    brochure.generate_brochure("Nehemiah Hope Center", "https://www.nehemiahhc.com")
+    brochure.generate_brochure("OpenAI", "https://openai.com")
     
-
