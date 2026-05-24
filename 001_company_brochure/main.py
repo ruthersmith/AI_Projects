@@ -37,6 +37,7 @@ import requests
 import json
 from bs4 import BeautifulSoup
 from openai import OpenAI
+import gradio as gr
 
 
 class Brochure:
@@ -167,10 +168,47 @@ class Brochure:
         result = response.choices[0].message.content
 
         print(result)
+        return result
+
+    
+    def stream_brochure_generation(self, company_name = "", website_url = ""):
+  
+        stream = self.openai.chat.completions.create(
+            model=self.model,
+            messages=[
+            {"role": "system", "content": self._get_brochure_system_prompt()},
+            {"role": "user", "content": self._get_brochure_user_prompt(company_name, website_url)}
+            ],
+            stream=True
+        )
+        result = ""
+        for chunk in stream:
+            result += chunk.choices[0].delta.content or ""
+            yield result
 
 
+    def generate_brochure_with_gradio(self):
+        
+        name_input = gr.Textbox(label="Company name:")
+        url_input = gr.Textbox(label="Landing page URL including http:// or https://")
+        message_output = gr.Markdown(label="Response:")
+
+        view = gr.Interface(
+            fn=self.stream_brochure_generation,
+            title="Brochure Generator", 
+            inputs=[name_input, url_input], 
+            outputs=[message_output], 
+            examples=[
+                    ["nehemiah hope center", "https://www.nehemiahhc.com"],
+                    ["Edward Donner", "https://edwarddonner.com"]
+                ], 
+            flagging_mode="never"
+            )
+        view.launch(inbrowser=True)
 
 if __name__ == "__main__":
     brochure = Brochure()
-    brochure.generate_brochure("OpenAI", "https://openai.com")
+    # brochure.generate_brochure("OpenAI", "https://openai.com")
+    brochure.generate_brochure_with_gradio()
+    # gr.close_all()
     
