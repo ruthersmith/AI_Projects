@@ -1,13 +1,26 @@
 """
 main.py
 
-This module contains the `Brochure` class, which is responsible for generating
-company brochures in Markdown format using a large language model (LLM).
+This module contains the `Brochure` class and supporting functionality for
+generating AI-powered company brochures in Markdown format using a large
+language model (LLM).
 
-The primary public interface of this module is the
-`Brochure.generate_brochure()` method. This method accepts a company name and
-company website URL, gathers and processes relevant information, and produces
-a structured Markdown brochure for the company.
+The core workflow gathers and processes information about a company from its
+website, then generates a structured brochure using an LLM. Brochures can be
+generated either as a standard response or streamed incrementally for an
+improved real-time user experience.
+
+Primary interfaces:
+    - `Brochure.generate_brochure()`
+        Generates a complete brochure as a Markdown string.
+
+    - `Brochure.stream_brochure_generation()`
+        Streams brochure generation token-by-token using the Chat Completion
+        API with `stream=True` for improved responsiveness.
+
+    - `Brochure.generate_brochure_with_gradio()`
+        Launches an interactive Gradio web interface for generating brochures
+        through a user-friendly UI.
 
 The implementation currently uses the OpenAI Python client library configured
 to work with a locally hosted Ollama instance running the `llama3.2` model.
@@ -19,19 +32,29 @@ Typical usage:
 
 Example:
     brochure = Brochure()
+
     markdown = brochure.generate_brochure(
         company_name="OpenAI",
         company_website="https://openai.com"
     )
 
+Example with streaming:
+    for chunk in brochure.stream_brochure_generation(
+        company_name="OpenAI",
+        company_website="https://openai.com"
+    ):
+        print(chunk, end="")
+
 Requirements:
     - Ollama installed and running locally
     - `llama3.2` model available in Ollama
     - OpenAI Python client library installed
+    - Gradio installed for the web interface
 
 Purpose:
-    Generate simple AI-powered company brochures in Markdown format from a
-    company name and website.
+    Generate AI-powered company brochures in Markdown format from a company
+    name and website, with support for both streaming responses and an
+    interactive Gradio-based UI.
 """
 import requests
 import json
