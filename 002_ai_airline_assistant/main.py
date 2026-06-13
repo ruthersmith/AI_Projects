@@ -51,34 +51,38 @@ class AirlineAssistant:
                 Give short, courteous answers, no more than 1 sentence.
                 Always be accurate. If you don't know the answer, say so.
                 """
-    
-    def handle_tool_call(self,message):
-        tool_call = message.tool_calls[0]
-        if tool_call.function.name == "get_ticket_price":
-            arguments = json.loads(tool_call.function.arguments)
-            city = arguments.get('destination_city')
-            price_details =  Tools.get_ticket_price(city)
-            response = {
-                "role": "tool",
-                "content": price_details,
-                "tool_call_id": tool_call.id
-            }
-        return response
 
-    def chat(self,message, history):
+    
+    def handle_tool_calls(self, message):
+        responses = []
+        for tool_call in message.tool_calls:
+            if tool_call.function.name == "get_ticket_price":
+                arguments = json.loads(tool_call.function.arguments)
+                city = arguments.get('destination_city')
+                price_details = Tools.get_ticket_price(city)
+                responses.append({
+                    "role": "tool",
+                    "content": price_details,
+                    "tool_call_id": tool_call.id
+                })
+
+        return responses
+
+
+    def chat(self, message, history):
         history = [{"role":h["role"], "content":h["content"]} for h in history]
         messages = [{"role": "system", "content": self.get_system_message()}] + history + [{"role": "user", "content": message}]
         response = self.openai.chat.completions.create(model=self.model, messages=messages, tools=Tools.get_tools())
 
-        if response.choices[0].finish_reason=="tool_calls":
+        while response.choices[0].finish_reason=="tool_calls":
             message = response.choices[0].message
-            response = self.handle_tool_call(message)
+            responses = self.handle_tool_calls(message)
             messages.append(message)
-            messages.append(response)
-            response = self.openai.chat.completions.create(model=self.model, messages=messages)
-
-
+            messages.extend(responses)
+            response = self.openai.chat.completions.create(model=self.model, messages=messages, tools=Tools.get_tools())
+        
         return response.choices[0].message.content
+
     
     def launch_assistant(self):
         gr.ChatInterface(fn=self.chat).launch()
